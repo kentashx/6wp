@@ -933,6 +933,7 @@ int val = 0;
 //int analog_output = 0;
 int digital_output = 5;
 int pulse = 0;//パルスが出力
+static int seq_pulse = 0;//パルスの連続回数
 int count =0;//ループ回数
 int loop_count =5000;//ループ回数
 double bpm =0.0;//bpm値を計測
@@ -959,7 +960,7 @@ void detect_pulse(){
 //HIGHの連続値が閾値を超えた時，パルス出力
   if(seq_count>thresh_hold){
     pulse=1;
-    pulse = pulse+1;
+    seq_pulse = seq_pulse+1;
     seq_count =0;
     delay(132);
   } 
@@ -1024,6 +1025,7 @@ void loop(){
   detect_pulse;
   if(pulse==1){
     play();
+    pulse = 0;
   }
   pulse_info();
   delay(2);

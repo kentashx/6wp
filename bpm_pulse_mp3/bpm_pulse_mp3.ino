@@ -932,11 +932,25 @@ int val = 0;
 //脈拍用
 //int analog_output = 0;
 int digital_output = 5;
+static int seq_pulse = 0;//パルスの連続個数
 int pulse = 0;//パルスが出力
 int count =0;//ループ回数
 int loop_count =5000;//ループ回数
 double bpm =0.0;//bpm値を計測
+int bpm_delay = 1000;//bpm値に基づくdelay
 static double one_loop_time =0;//1ループの時間
+static double spend_time = 0.0;//経過時間(ミリ秒)
+void bpm_pulse(){
+  static int measure_time = 10000;//計測時間(ミリ秒)
+  
+  spend_time = spend_time + millis();
+  if(spend_time>measure_time){
+    spend_time = 0;
+    seq_pulse = 0;
+    bpm = seq_pulse*60/(measure_time/1000);
+    bpm_delay = (bpm*1000)/bpm;
+  }
+}
 
 //pulseを検出する関数
 void detect_pulse(){
@@ -959,7 +973,7 @@ void detect_pulse(){
 //HIGHの連続値が閾値を超えた時，パルス出力
   if(seq_count>thresh_hold){
     pulse=1;
-    pulse = pulse+1;
+    seq_pulse = seq_pulse+1;
     seq_count =0;
     delay(132);
   } 
@@ -985,8 +999,6 @@ void pulse_info(){
     Serial.println("検出パルス数は");
     Serial.println(pulse);
     Serial.println("個です");
-    Serial.println("BPMは");
-    Serial.println(bpm);
     Serial.println("END");
     delay(10000000);
   }
@@ -1021,12 +1033,11 @@ void play() {
 void loop(){
   count = count+1;
   loop_time();
-  detect_pulse;
-  if(pulse==1){
-    play();
-  }
+  detect_pulse();
+  bpm_pulse();
+  play();
+  delay(bpm_delay);
   pulse_info();
-  delay(2);
 }
 
 
