@@ -937,18 +937,17 @@ int pulse = 0;//パルスが出力
 int count =0;//ループ回数
 int loop_count =5000;//ループ回数
 double bpm =0.0;//bpm値を計測
+int bpm_flag = 0;//bpm値を計測
 int bpm_delay = 1000;//bpm値に基づくdelay
 static double one_loop_time =0;//1ループの時間
 static double spend_time = 0.0;//経過時間(ミリ秒)
+static int measure_time = 10000;//計測時間(ミリ秒)
+
 void bpm_pulse(){
-  static int measure_time = 10000;//計測時間(ミリ秒)
-  
-  spend_time = spend_time + millis();
-  if(spend_time>measure_time){
-    spend_time = 0;
-    seq_pulse = 0;
-    bpm = seq_pulse*60/(measure_time/1000);
-    bpm_delay = (bpm*1000)/bpm;
+    if(bpm_flag==0){
+      bpm = seq_pulse*60/(measure_time/1000);
+      bpm_delay = (bpm*1000)/60;
+      bpm_flag = bpm_flag+1;
   }
 }
 
@@ -958,7 +957,7 @@ void detect_pulse(){
   static int seq_count =0;//パルスの連続回数
   static int thresh_hold =20;//ノイズ除去閾値
   static int detect_val = 0;
-  Serial.println(pulse);
+  Serial.println(seq_pulse);
 //detect_val =analogRead(analog_output);
   detect_val = digitalRead(digital_output);
 //HIGHが連続した時のみカウントする
@@ -1031,12 +1030,17 @@ void play() {
 }
 
 void loop(){
+  spend_time = spend_time + millis();
   count = count+1;
-  loop_time();
-  detect_pulse();
-  bpm_pulse();
-  play();
-  delay(bpm_delay);
+  if(spend_timet<measure_time){
+    loop_time();
+    detect_pulse();
+  }
+  else{
+    bpm_pulse();
+    play();
+    delay(bpm_delay);
+  }
   pulse_info();
 }
 

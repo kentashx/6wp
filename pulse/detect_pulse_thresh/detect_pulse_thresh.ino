@@ -1,6 +1,7 @@
 //int analog_output = 0;
 int digital_output = 5;
 int pulse = 0;//パルスが出力
+int seq_pulse = 0;//パルスの連続回数を出力
 int count =0;//ループ回数
 int loop_count =5000;//ループ回数
 double bpm =0.0;//bpm値を計測
@@ -12,7 +13,7 @@ void detect_pulse(){
   static int seq_count =0;//パルスの連続回数
   static int thresh_hold =20;//ノイズ除去閾値
   static int detect_val = 0;
-  Serial.println(pulse);
+  Serial.println(seq_pulse);
 //detect_val =analogRead(analog_output);
   detect_val = digitalRead(digital_output);
 //HIGHが連続した時のみカウントする
@@ -27,7 +28,7 @@ void detect_pulse(){
 //HIGHの連続値が閾値を超えた時，パルス出力
   if(seq_count>thresh_hold){
     pulse = 1;
-    pulse = pulse+1;
+    seq_pulse = seq_pulse+1;
     seq_count =0;
     delay(132);
   } 
@@ -42,7 +43,7 @@ void pulse_info(){
  static double time = 0.0;
  if(count>loop_count){
     time = millis();
-    bpm = pulse*60/(time/1000);
+    bpm = seq_pulse*60/(time/1000);
     //prints time since program started
     Serial.println("1ループにかかる時間は");
     Serial.println(one_loop_time);
@@ -51,7 +52,7 @@ void pulse_info(){
     Serial.println("msです");
     Serial.println("END");
     Serial.println("検出パルス数は");
-    Serial.println(pulse);
+    Serial.println(seq_pulse);
     Serial.println("個です");
     Serial.println("BPMは");
     Serial.println(bpm);
