@@ -1,3 +1,11 @@
+**********************************************
+＊プログラム概要説明
+脈拍を検出したら音が鳴る。
+音は、テキストデータとして格納
+
+＊課題
+脈拍の検出部分でのノイズ除去精度が高くない
+**********************************************
 const unsigned char dram_raw[] PROGMEM = {
   0x3e, 0x42, 0x43, 0x41, 0x44, 0x45, 0x46, 0x4a, 0x4d, 0x52, 0x5a, 0x5e,
   0x64, 0x72, 0x76, 0x73, 0x6d, 0x6e, 0x6c, 0x67, 0x60, 0x5f, 0x64, 0x68,
@@ -945,9 +953,10 @@ void detect_pulse(){
   static int seq_count =0;//パルスの連続回数
   static int thresh_hold =20;//ノイズ除去閾値
   static int detect_val = 0;
-  Serial.println(pulse);
+  
 //detect_val =analogRead(analog_output);
   detect_val = digitalRead(digital_output);
+  Serial.println(pulse);
 //HIGHが連続した時のみカウントする
   if(old_detect_val==1){
     if(detect_val==1){
@@ -975,7 +984,7 @@ void pulse_info(){
  static double time = 0.0;
  if(count>loop_count){
     time = millis();
-    bpm = pulse*60/(time/1000);
+    bpm = seq_pulse*60/(time/1000);
     //prints time since program started
     Serial.println("1ループにかかる時間は");
     Serial.println(one_loop_time);
@@ -984,7 +993,7 @@ void pulse_info(){
     Serial.println("msです");
     Serial.println("END");
     Serial.println("検出パルス数は");
-    Serial.println(pulse);
+    Serial.println(seq_pulse);
     Serial.println("個です");
     Serial.println("BPMは");
     Serial.println(bpm);
@@ -1022,10 +1031,9 @@ void play() {
 void loop(){
   count = count+1;
   loop_time();
-  detect_pulse;
+  detect_pulse();
   if(pulse==1){
     play();
-    pulse = 0;
   }
   pulse_info();
   delay(2);
