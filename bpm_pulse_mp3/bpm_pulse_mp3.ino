@@ -1,4 +1,4 @@
-**********************************************
+/**********************************************
 ＊プログラム概要説明
 脈拍を計測時間中は、計測。（デフォルトは10秒）
 １０秒後、bpm_delayを算出し、その後はそのテンポで鳴らし続ける。
@@ -6,7 +6,7 @@
 
 ＊課題
 計測時間の妥当性。
-**********************************************
+**********************************************/
 const unsigned char dram_raw[] PROGMEM = {
   0x3e, 0x42, 0x43, 0x41, 0x44, 0x45, 0x46, 0x4a, 0x4d, 0x52, 0x5a, 0x5e,
   0x64, 0x72, 0x76, 0x73, 0x6d, 0x6e, 0x6c, 0x67, 0x60, 0x5f, 0x64, 0x68,
@@ -935,20 +935,18 @@ const unsigned char dram_raw[] PROGMEM = {
   0x7a, 0x7a, 0x7b, 0x7b, 0x7b, 0x7b, 0x7c, 0x7d
 };
 //MP3再生用変数
-unsigned int dram_raw_len =11096;
-double temp = 1.0;
+unsigned int dram_raw_len =11096;//テキストデータの長さ
+double temp = 1.0;//テンポ
 int val = 0;
 //脈拍用
 //int analog_output = 0;
-int digital_output = 5;
+int digital_output = 5;//脈拍のデジタル値を読み込むのためのピン
 static int seq_pulse = 0;//パルスの連続個数
 int pulse = 0;//パルスの検出値
-int count =0;//ループ回数
-int loop_count =5000;//終了ループ回数
 double bpm =0.0;//計測したbpm値
 int bpm_flag = 0;//bpmの計算を一回にするためのフラグ
 int bpm_delay = 1000;//bpm値に基づくdelay
-static double one_loop_time =0;//1ループの時間
+static double one_loop_time =0.0;//1ループの時間
 static int measure_time = 10000;//計測時間(ミリ秒)
 
 void bpm_pulse(){
@@ -963,25 +961,31 @@ void bpm_pulse(){
 void detect_pulse(){
   static int old_detect_val = 0;
   static int seq_count =0;//パルスの連続回数
-  static int thresh_hold =20;//ノイズ除去閾値
+  static int thresh_hold =100;//ノイズ除去時間
+  static int high_time_start = 0;//ノイズ除去用の時間
+  static int high_time_total = 0;
   static int detect_val = 0;
-//Serial.println(seq_pulse);
+  Serial.println(seq_pulse);
 //detect_val =analogRead(analog_output);
   detect_val = digitalRead(digital_output);
-//HIGHが連続した時のみカウントする
-  if(old_detect_val==1){
+//HIGHの立ち上がりの時間を検出,HIGHになっている時間を検出
+  if(old_detect_val==0){
     if(detect_val==1){
-      seq_count =seq_count+1;
+      high_time_start = millis();
      }
   }
+  else if(detect_val==1){
+    high_time_total = millis() - high_time_start;
+  }
   else{
-    seq_count=0;
+    high_time_total = 0;
+    high_time_start = 0;
   }
 //HIGHの連続値が閾値を超えた時，パルス出力
-  if(seq_count>thresh_hold){
+  if(high_time_total>thresh_hold){
+    //Serial.println(high_time_start);
     pulse=1;
     seq_pulse = seq_pulse+1;
-    seq_count =0;
     delay(132);
   } 
   else{
@@ -992,28 +996,32 @@ void detect_pulse(){
 
 //最後にパルス値を出力する関数
 void pulse_info(){
- //if(count>loop_count){
-    bpm = pulse*60/(millis()/1000);
-    //prints time since program started
+  static int pulse_flag = 0;
+  if (pulse_flag==0){
+    bpm = seq_pulse*60/(measure_time/1000);
+    Serial.println("bpmは");
+    Serial.println(bpm);
     Serial.println("1ループにかかる時間は");
-    Serial.println(one_loop_time);
+    Serial.println(one_loop_time/100);
+    Serial.println("msです");
     Serial.println("終了時間は");
     Serial.println(millis());
     Serial.println("msです");
     Serial.println("END");
     Serial.println("検出パルス数は");
-    Serial.println(pulse);
+    Serial.println(seq_pulse);
     Serial.println("個です");
     Serial.println("END");
-    delay(10000000);
-  //}
+    pulse_flag = pulse_flag + 1;
+  }
 }
 
 //1ループにかかる時間を検出
 void loop_time() {
+  delay(5000);//脈拍が安定するまでの5秒間は待つ
   static int flag =0;//1ループを計測するためのフラグ
   flag=flag+1;
-  if(flag==2){
+  if(flag==100){
     one_loop_time =millis();
     flag = flag+1;
   }
@@ -1036,14 +1044,13 @@ void play() {
 }
 
 void loop(){
-  count = count+1;
   if(millis()<measure_time){
-    loop_time();
+    loop_time();//チェック用
     detect_pulse();
   }
   else{
     bpm_pulse();
-    Serial.println(bpm_delay);
+    pulse_info();
     play();
     delay(bpm_delay);
   }
