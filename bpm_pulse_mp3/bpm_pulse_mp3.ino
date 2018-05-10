@@ -948,11 +948,75 @@ int bpm_flag = 0;//bpmの計算を一回にするためのフラグ
 int bpm_delay = 1000;//bpm値に基づくdelay
 static double one_loop_time =0.0;//1ループの時間
 static int measure_time = 10000;//計測時間(ミリ秒)
+static int flag =0;//1ループを計測するためのフラグ
 
+//ボタン用
+boolean start_button_flag =  0;//0でstop、１でstart
+boolean reset_button_flag =  0;//0は無効、1でreset
+static long start_time = 0;//処理開始時間
+static long start_time_flag = 0;//処理開始判定。0の時は処理行われず。1の時は処理開始。
+static int SW =4;
+static int PUSH_SHORT = 70;//ショートボタンの閾値
+static int PUSH_LONG = 1000;//ロングボタンの閾値
+boolean button = 0;
+
+//リセットする関数 
+void software_reset(){
+  asm volatile (" jmp 0");
+  reset_button_flag = 1;
+  start_time_flag = 0;
+  flag = 0;
+}
+
+//ボタンを検出する関数
+//ボタンを検出する関数
+void detect_button(){
+  unsigned long gauge_time = 0;
+  static unsigned long gauge_time_start = 0;
+  static unsigned long gauge_time_flag = 0;
+  //HIGHになってる時間を検出
+  while (!digitalRead(SW))
+  {
+    if(gauge_time_flag == 0){
+      gauge_time_start = millis();
+      gauge_time_flag = 1;
+    }
+    gauge_time = millis() - gauge_time_start;
+  }
+//HIGHの連続時間により短い押し、長い押しを判断
+ if(gauge_time>PUSH_LONG){
+    Serial.print("reset!!!!");
+    Serial.print(":");
+    Serial.print(gauge_time);
+    Serial.print("  LONG!");
+    Serial.println();
+    reset_button_flag = 1;
+    gauge_time_flag = 0;
+  } 
+  else if(gauge_time>PUSH_SHORT){
+    start_button_flag = !start_button_flag;
+    Serial.print(start_button_flag);
+    Serial.print(":");
+    Serial.print(gauge_time);
+    Serial.print("  SHORT!");
+    Serial.println();
+    gauge_time_flag = 0;
+    if(start_time_flag==0){
+      Serial.println("はじめ");
+      start_time = millis();
+      start_time_flag =start_time_flag+1;
+    }
+  } 
+  gauge_time = 0;
+  gauge_time_start=0;
+  gauge_time_flag = 0;
+}
+
+//bpm値を検出する関数
 void bpm_pulse(){
     if(bpm_flag==0){
       bpm = seq_pulse*60/(measure_time/1000);
-      bpm_delay = (bpm*1000)/60;
+      bpm_delay = 60000/bpm;
       bpm_flag = bpm_flag+1;
   }
 }
@@ -986,7 +1050,7 @@ void detect_pulse(){
     //Serial.println(high_time_start);
     pulse=1;
     seq_pulse = seq_pulse+1;
-    delay(132);
+    delay(100);
   } 
   else{
     pulse=0;
@@ -998,19 +1062,22 @@ void detect_pulse(){
 void pulse_info(){
   static int pulse_flag = 0;
   if (pulse_flag==0){
-    bpm = seq_pulse*60/(measure_time/1000);
-    Serial.println("bpmは");
+    Serial.print("bpmは");
     Serial.println(bpm);
-    Serial.println("1ループにかかる時間は");
-    Serial.println(one_loop_time/100);
+    Serial.print("bpm_dalayは");
+    Serial.println(bpm_delay);
+    Serial.print("1ループにかかる時間は");
+    Serial.print(one_loop_time/100);
     Serial.println("msです");
-    Serial.println("終了時間は");
-    Serial.println(millis());
+    Serial.print("終了時間は");
+    Serial.print(millis());
     Serial.println("msです");
-    Serial.println("END");
-    Serial.println("検出パルス数は");
-    Serial.println(seq_pulse);
+    Serial.print("検出パルス数は");
+    Serial.print(seq_pulse);
     Serial.println("個です");
+    Serial.print("開始時間は");
+    Serial.print(start_time);
+    Serial.println("msです");
     Serial.println("END");
     pulse_flag = pulse_flag + 1;
   }
@@ -1018,9 +1085,11 @@ void pulse_info(){
 
 //1ループにかかる時間を検出
 void loop_time() {
-  delay(5000);//脈拍が安定するまでの5秒間は待つ
-  static int flag =0;//1ループを計測するためのフラグ
+  //delay(5000);//脈拍が安定するまでの5秒間は待つ
   flag=flag+1;
+  if(flag==2){
+   Serial.println("はじめ");
+  }
   if(flag==100){
     one_loop_time =millis();
     flag = flag+1;
@@ -1031,6 +1100,7 @@ void loop_time() {
 void setup() {
   Serial.begin(9600);
   pinMode(3,OUTPUT);
+  pinMode(SW, INPUT_PULLUP);
   TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
   TCCR2B = _BV(CS20);
 
@@ -1044,15 +1114,25 @@ void play() {
 }
 
 void loop(){
-  if(millis()<measure_time){
-    loop_time();//チェック用
-    detect_pulse();
+  detect_button();
+  if(reset_button_flag==1){
+    Serial.print("reset!!!!");
+    reset_button_flag==0;
+    software_reset();
   }
-  else{
+  else if(start_button_flag == 1){
+    if((millis() - start_time)<measure_time){
+      //Serial.println("はじめ");
+      detect_pulse();
+      loop_time();//チェック用
+    }
+    else{
+    //Serial.println("後半");
     bpm_pulse();
     pulse_info();
     play();
     delay(bpm_delay);
+    }
   }
 }
 
