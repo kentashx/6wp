@@ -348,10 +348,8 @@ void play() {
 }
 
 void loop(){
-  val = analogRead(SENSOR);
-  //Serial.println(val);
-  Serial.println(analogRead(5));
-  temp = (val*10)/brigh_standard;
+  //val = 800;
+  //temp = (val*10)/brigh_standard;
   play();
   delay(temp);
 }

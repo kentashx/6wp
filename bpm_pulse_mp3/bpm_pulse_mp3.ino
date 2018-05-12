@@ -1,3 +1,5 @@
+#include <Adafruit_NeoPixel.h>
+
 /**********************************************
 ＊プログラム概要説明
 脈拍を計測時間中は、計測。（デフォルトは10秒）
@@ -951,26 +953,38 @@ static int measure_time = 10000;//計測時間(ミリ秒)
 static int flag =0;//1ループを計測するためのフラグ
 
 //ボタン用
-boolean start_button_flag =  0;//0でstop、１でstart
-boolean reset_button_flag =  0;//0は無効、1でreset
+//boolean start_button_flag =  0;//0でstop、１でstart
+//boolean button_flag =  0;//0は無効、1でreset
+int button_flag = 0;// トグル:どの切り替えがされているかが格納
+int toggle = 13;//トグルピンを読み込むピン
 static long start_time = 0;//処理開始時間
 static long start_time_flag = 0;//処理開始判定。0の時は処理行われず。1の時は処理開始。
-static int SW =4;
+static int SW =13;
 static int PUSH_SHORT = 70;//ショートボタンの閾値
 static int PUSH_LONG = 1000;//ロングボタンの閾値
 boolean button = 0;
 
+//neopixcel用
+#define PIN            10 //シリアル通信GPIOピン番号
+#define MAXPIXELS      12 //LED素子の最大数
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(MAXPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+//neopixcel_loading用
+uint8_t LedNum1_Inc = 9; //最初にフェードインするLED番号
+uint8_t LedNum1_Dec = 8; //フェードアウトするLED番号
+ 
+uint8_t ChangeType = 3; //LED点灯パターンを決める引数
+uint32_t ChangeTime; //LED点灯パターンを変える時間
+int cnt = 0; //256段階でLEDをフェードさせるためのカウント
 //リセットする関数 
 void software_reset(){
   asm volatile (" jmp 0");
-  reset_button_flag = 1;
   start_time_flag = 0;
-  flag = 0;
 }
 
 //ボタンを検出する関数
 //ボタンを検出する関数
-void detect_button(){
+/*void detect_button(){
   unsigned long gauge_time = 0;
   static unsigned long gauge_time_start = 0;
   static unsigned long gauge_time_flag = 0;
@@ -990,7 +1004,7 @@ void detect_button(){
     Serial.print(gauge_time);
     Serial.print("  LONG!");
     Serial.println();
-    reset_button_flag = 1;
+    button_flag = 1;
     gauge_time_flag = 0;
   } 
   else if(gauge_time>PUSH_SHORT){
@@ -1011,13 +1025,31 @@ void detect_button(){
   gauge_time_start=0;
   gauge_time_flag = 0;
 }
-
+*/
 //bpm値を検出する関数
 void bpm_pulse(){
     if(bpm_flag==0){
       bpm = seq_pulse*60/(measure_time/1000);
       bpm_delay = 60000/bpm;
       bpm_flag = bpm_flag+1;
+  }
+}
+
+//ON-OFF-ONのトグルスイッチの切り替えによって動作を変える
+void detect_toggle_button(){
+  int old_old_val = 0;//チャタリング用
+  int old_val = 0;//チャタリング用
+  int val = 0;
+  old_old_val = digitalRead(toggle);
+  delay(5);
+  old_val = digitalRead(toggle);
+  delay(5);
+  val = digitalRead(toggle);
+  if((old_old_val==0)&&(old_val==0)&&(val==0)){
+    button_flag=0;
+  }
+  else{
+    button_flag=1;
   }
 }
 
@@ -1096,9 +1128,31 @@ void loop_time() {
   }
 }
 
+//脈拍検知用
+void led_loading(){
+      
+      pixels.setPixelColor(LedNum1_Inc, pixels.Color(0, cnt, 30));
+      pixels.show();
+      pixels.setPixelColor(LedNum1_Dec, pixels.Color(0,255-cnt, 30));
+      pixels.show();
+
+      cnt = cnt+1;
+
+      if(cnt == 256){ //フェードが最大、最少になったらLED素子を変える
+        LedNum1_Inc++;
+        if(LedNum1_Inc >= 12){ 
+        LedNum1_Inc = 0;
+        }
+        LedNum1_Dec++;
+        if(LedNum1_Dec >= 12) LedNum1_Dec = 0;
+        cnt = 0;
+       }
+}
 
 void setup() {
   Serial.begin(9600);
+  pixels.begin(); // This initializes the NeoPixel library.
+  pixels.setBrightness(255); //Max 255.power of bllitness
   pinMode(3,OUTPUT);
   pinMode(SW, INPUT_PULLUP);
   TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
@@ -1114,13 +1168,14 @@ void play() {
 }
 
 void loop(){
-  detect_button();
-  if(reset_button_flag==1){
+  detect_toggle_button();
+  led_loading();
+  if(button_flag==0){
     Serial.print("reset!!!!");
-    reset_button_flag==0;
+    delay(1000);
     software_reset();
   }
-  else if(start_button_flag == 1){
+  else if(button_flag == 1){
     if((millis() - start_time)<measure_time){
       //Serial.println("はじめ");
       detect_pulse();

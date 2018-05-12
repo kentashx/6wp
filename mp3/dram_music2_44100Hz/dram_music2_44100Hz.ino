@@ -950,13 +950,11 @@ void play() {
 void loop(){
   val = analogRead(SENSOR);
   //Serial.println(val);
-  Serial.println(analogRead(5));
-  temp = (val*10)/brigh_standard;
+  //Serial.println(analogRead(5));
+  //temp = (val*10)/brigh_standard;
+  temp = 2000;
   play();
   delay(temp);
-  if(count>1000000){
-    delay(1000000000000);
-  }
 }
 
 

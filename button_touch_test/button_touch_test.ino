@@ -1,9 +1,9 @@
-#define LED 6
-#define SW  4
+const int LED = 6;
+const int SW = 13;
 boolean button = 0;
  
-#define PUSH_SHORT 70//ショートボタンの閾値
-#define PUSH_LONG  1000//ロングボタンの閾値
+const int PUSH_SHORT= 70;//ショートボタンの閾値
+const int PUSH_LONG = 1000;//ロングボタンの閾値
 
 //ボタンを検出する関数
 void detect_button(){
@@ -45,12 +45,10 @@ void detect_button(){
 
 
 void setup() {
-  pinMode(LED, OUTPUT);
   pinMode(SW, INPUT_PULLUP);
   Serial.begin(9600);
 }
  
 void loop() {
   detect_button();
-  digitalWrite(LED, button);
 }
