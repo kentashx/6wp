@@ -150,44 +150,90 @@ void temp_measure(){
     temp_flag++;*/
   }
 }
-
-//再生用
-void play(){
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(62,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp2); //volms待つ
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp2); //volms待つ
-      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(60,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(62,0,1);
-    delay(temp1); //volms待つ
-      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
-      MIDI.sendNoteOff(62,0,1);
-    delay(temp1);
+void detect_reset(){
     detect_toggle_button();
     if(button_flag==0){
-      Serial.print("reset!!!!");
-      delay(1000);
       software_reset();
+      delay(1000);
   }
 }
 
+//再生用
+void play_coffe(){
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(62,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+      detect_reset;
+    delay(temp2); //volms待つ
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+    delay(temp2); //volms待つ
+      MIDI.sendNoteOn(60,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(60,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(62,0,1);
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(62,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(62,0,1);
+      detect_reset;
+    delay(temp1);
+    detect_reset;
+}
+
+void play(){
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(38,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(38,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+      detect_reset;
+    delay(temp2); //volms待つ
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+    delay(temp2); //volms待つ
+      MIDI.sendNoteOn(36,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(36,0,1);
+      detect_reset;
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(38,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(38,0,1);
+    delay(temp1); //volms待つ
+      MIDI.sendNoteOn(38,vol,1); //Note No 36をオンベロシティvol,1chで送信
+      MIDI.sendNoteOff(38,0,1);
+      detect_reset;
+    delay(temp1);
+    detect_reset;
+}
 void setup() {
   Serial.begin(9600);
   MIDI.begin();
